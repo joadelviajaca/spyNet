@@ -1,0 +1,226 @@
+{
+  "info": {
+    "_postman_id": "11ce8774-1e25-4ecf-bbb5-0039c95f8984",
+    "name": "spyNet",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login Agent",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "e9a6fd82-fa10-407d-aa0c-49b975e6e9f9",
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"JWT_agent\", jsonData.token);",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "id": "cee90a35-3c3f-4f41-b714-b071a47c6383",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"bond@mi6.com\",\n    \"password\": \"1234\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/auth/login",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login Admin",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "id": "967681e2-219f-4e8e-b0fe-3973f5bea00e",
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"JWT_admin\", jsonData.token);",
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {}
+          }
+        }
+      ],
+      "id": "5570fb11-1a8b-4f6e-bdf3-b17ad80901a4",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"m@mi6.com\",\n    \"password\": \"1234\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/auth/login",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get missions",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "55f9e2aa-f36a-45d3-8c18-ab1d25acaf11",
+            "exec": [
+              "try {",
+              "    const response = await pm.execution.runRequest(\"39873449-cee90a35-3c3f-4f41-b714-b071a47c6383\");",
+              "",
+              "    console.log(response.json());",
+              "} catch (err) {",
+              "    console.error(err);",
+              "}"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {
+              "39873449-cee90a35-3c3f-4f41-b714-b071a47c6383": {
+                "workspace": "0c05fa6c-14bc-42b1-8e83-19f6adcb706e",
+                "collection": "39873449-11ce8774-1e25-4ecf-bbb5-0039c95f8984",
+                "location": [
+                  "spyNet",
+                  "Login Agent"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "id": "962ce826-db44-4f09-b068-d54bce404c25",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_agent}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{URL}}/missions",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "missions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add mission agent",
+      "id": "fed03d2a-6a9b-4599-8a4f-96c4530a89b5",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_agent}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \n    \"title\": \"GoldenEye\", \n    \"description\": \"Combatir medios de comunicación y tecnología rusa\", \n    \"difficulty\": \"Alta\" \n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/missions",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "missions"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add mission admin",
+      "id": "87bbe90b-5522-48cc-b8c7-d6ef7284a731",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{JWT_agent}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \n    \"title\": \"GoldenEye\", \n    \"description\": \"Combatir medios de comunicación y tecnología rusa\", \n    \"difficulty\": \"Alta\" \n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{URL}}/missions",
+          "host": [
+            "{{URL}}"
+          ],
+          "path": [
+            "missions"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
