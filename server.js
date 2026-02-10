@@ -7,8 +7,8 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 
 // --- CONFIGURACIÓN ---
 const app = express();
-const PORT = 3001; // Diferente al 3000 de React
-const SECRET_KEY = 'top_secret_spy_key_123'; // En producción esto va en .env
+const PORT = 3001; 
+const SECRET_KEY = 'top_secret_spy_key_123'; 
 
 app.use(cors());
 app.use(express.json());
@@ -37,7 +37,7 @@ const MissionSchema = new mongoose.Schema({
   description: { type: String, required: true },
   difficulty: { type: String, enum: ['Baja', 'Media', 'Alta', 'Imposible'] },
   status: { type: String, default: 'Pendiente' },
-  agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false } // Opcional
+  agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false }
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -77,15 +77,13 @@ const seedDatabase = async () => {
 };
 
 // --- MIDDLEWARES ---
-// Simula retardo de red para ver los spinners en React
 app.use((req, res, next) => {
-  setTimeout(next, 500); 
+  setTimeout(next, 500); // Simula latencia
 });
 
-// Verifica el Token JWT
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // "Bearer TOKEN"
+  const token = authHeader && authHeader.split(' ')[1]; 
 
   if (!token) return res.status(401).json({ message: 'Acceso denegado. Se requiere Token.' });
 
@@ -98,7 +96,50 @@ const authenticateToken = (req, res, next) => {
 
 // --- RUTAS DE AUTENTICACIÓN ---
 
-// POST /auth/login
+// 🆕 POST /auth/register - Crear nuevo agente
+app.post('/auth/register', async (req, res) => {
+  const { email, password, name } = req.body;
+
+  try {
+    // 1. Verificar si existe
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'El email ya está registrado en la agencia.' });
+    }
+
+    // 2. Hashear password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. Crear usuario (Forzamos role: 'agent' por seguridad)
+    const newUser = await User.create({
+      email,
+      password: hashedPassword,
+      name,
+      role: 'agent' 
+    });
+
+    // 4. Generar Token (Misma estructura que Login)
+    const tokenPayload = { 
+      id: newUser._id, 
+      email: newUser.email, 
+      name: newUser.name, 
+      role: newUser.role 
+    };
+
+    const token = jwt.sign(tokenPayload, SECRET_KEY, { expiresIn: '1h' });
+
+    // 5. Responder
+    res.status(201).json({ 
+      token, 
+      user: tokenPayload // Devolvemos id, email, name, role
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: 'Error en el servidor al registrar agente.' });
+  }
+});
+
+// 🔄 POST /auth/login - Modificado para consistencia
 app.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
@@ -107,24 +148,29 @@ app.post('/auth/login', async (req, res) => {
     return res.status(401).json({ message: 'Credenciales incorrectas (Intenta: bond@mi6.com / 1234)' });
   }
 
-  // Generamos Token
-  const token = jwt.sign({ id: user._id, role: user.role, name: user.name }, SECRET_KEY, { expiresIn: '1h' });
+  // Generamos Token con TODOS los datos (id, email, name, role)
+  const tokenPayload = { 
+    id: user._id, 
+    email: user.email, 
+    name: user.name, 
+    role: user.role 
+  };
+
+  const token = jwt.sign(tokenPayload, SECRET_KEY, { expiresIn: '1h' });
   
   res.json({ 
     token, 
-    user: { email: user.email, name: user.name, role: user.role } 
+    user: tokenPayload // El objeto user es idéntico al contenido del token
   });
 });
 
 // --- RUTAS DE MISIONES (PROTEGIDAS) ---
 
-// GET /missions - Solo usuarios autenticados
 app.get('/missions', authenticateToken, async (req, res) => {
   const missions = await Mission.find();
   res.json(missions);
 });
 
-// POST /missions - Solo ADMINS pueden crear misiones
 app.post('/missions', authenticateToken, async (req, res) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ message: 'Permisos insuficientes. Solo "M" puede crear misiones.' });
