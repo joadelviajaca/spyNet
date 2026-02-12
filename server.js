@@ -94,6 +94,19 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+
+app.post('/auth/check-email', async (req, res) => {
+  const { email } = req.body;
+  
+  try {
+    const user = await User.findOne({ email });
+    // Si user existe, isAvailable es false
+    res.json({ isAvailable: !user });
+  } catch (error) {
+    res.status(500).json({ error: 'Error verificando email' });
+  }
+});
+
 // --- RUTAS DE AUTENTICACIÓN ---
 
 // 🆕 POST /auth/register - Crear nuevo agente
